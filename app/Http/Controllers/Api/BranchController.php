@@ -18,8 +18,8 @@ class BranchController extends Controller
     public function index()
     {
         $branches = DB::table('branches')
-            ->join('branch_employee', 'branches.id', '=', 'branch_employee.branch_id')
-            ->join('employees', 'branch_employee.employee_id', '=', 'employees.id')
+            ->leftJoin('branch_employee', 'branches.id', '=', 'branch_employee.branch_id')
+            ->leftJoin('employees', 'branch_employee.employee_id', '=', 'employees.id')
             ->select('branches.*',
                 DB::raw('COUNT(branch_employee.employee_id) as employees_qty'),
                 DB::raw('MAX(employees.salary) as max_salary')
@@ -49,7 +49,7 @@ class BranchController extends Controller
      */
     public function store(ValidateBranchRequest $request)
     {
-        if(!empty($request->messages())) {
+        if (!empty($request->messages())) {
             return $request->messages();
         }
         $branch = new Branch();
@@ -89,7 +89,7 @@ class BranchController extends Controller
      */
     public function update(ValidateBranchRequest $request, $id)
     {
-        if(!empty($request->messages())) {
+        if (!empty($request->messages())) {
             return $request->messages();
         }
         $branch = Branch::find($id);
@@ -106,12 +106,11 @@ class BranchController extends Controller
      */
     public function destroy($id)
     {
-        if (Branch::find($id) != null) {
+        if (DB::table('branch_employee')->where('branch_id', $id)->count() == 0) {
             DB::table('branches')->where('id', $id)->delete();
             return json_encode('Success');
-        }
-        else {
-            return json_encode('Deletion error');
+        } else {
+            return json_encode('Deletion Error');
         }
 
     }
